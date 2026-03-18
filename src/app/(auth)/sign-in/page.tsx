@@ -1,8 +1,15 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { signInAction } from "./actions"
 import Link from "next/link"
+
+function CallbackUrlInput() {
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/notes"
+  return <input type="hidden" name="callbackUrl" value={callbackUrl} />
+}
 
 export default function SignInPage() {
   const [state, formAction, isPending] = useActionState(signInAction, undefined)
@@ -11,6 +18,9 @@ export default function SignInPage() {
     <main>
       <h1>Sign in to your account</h1>
       <form action={formAction}>
+        <Suspense fallback={null}>
+          <CallbackUrlInput />
+        </Suspense>
         <div>
           <label htmlFor="email">Email</label>
           <input

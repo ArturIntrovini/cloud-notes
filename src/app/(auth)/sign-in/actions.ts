@@ -10,6 +10,16 @@ export async function signInAction(
   _prevState: SignInResult,
   formData: FormData
 ): Promise<SignInResult> {
+  const rawCallbackUrl = formData.get("callbackUrl")
+  let callbackUrl = "/notes"
+  if (
+    typeof rawCallbackUrl === "string" &&
+    rawCallbackUrl.startsWith("/") &&
+    !rawCallbackUrl.startsWith("//")
+  ) {
+    callbackUrl = rawCallbackUrl
+  }
+
   const rawData = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -24,7 +34,7 @@ export async function signInAction(
     await signIn("credentials", {
       email: result.data.email,
       password: result.data.password,
-      redirectTo: "/notes",
+      redirectTo: callbackUrl,
     })
   } catch (error) {
     if (error instanceof AuthError) {
