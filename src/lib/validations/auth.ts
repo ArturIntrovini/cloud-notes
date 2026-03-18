@@ -6,3 +6,10 @@ export const signUpSchema = z.object({
 })
 
 export type SignUpInput = z.infer<typeof signUpSchema>
+
+export const signInSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required").max(72, "Password must be 72 characters or fewer"),
+})
+
+export type SignInInput = z.infer<typeof signInSchema>
