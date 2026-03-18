@@ -11,9 +11,13 @@ export async function PATCH(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const { id } = await params
-  const note = await restoreNote(id, session.user.id)
-  if (!note) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  try {
+    const note = await restoreNote(id, session.user.id)
+    if (!note) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    return NextResponse.json(note)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-  return NextResponse.json(note)
 }

@@ -30,7 +30,7 @@ export async function getNoteById(
   const [note] = await db
     .select()
     .from(notes)
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId), eq(notes.isTrashed, false)))
   return note ?? null
 }
 
@@ -39,13 +39,14 @@ export async function updateNote(
   userId: string,
   data: UpdateNoteInput
 ): Promise<Note | null> {
-  const fields = Object.fromEntries(
-    Object.entries(data).filter(([, v]) => v !== undefined)
-  )
+  const set: { title?: string; content?: string } = {}
+  if (data.title !== undefined) set.title = data.title
+  if (data.content !== undefined) set.content = data.content
+  if (Object.keys(set).length === 0) return null
   const [note] = await db
     .update(notes)
-    .set(fields)
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .set(set)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId), eq(notes.isTrashed, false)))
     .returning()
   return note ?? null
 }
@@ -57,7 +58,7 @@ export async function softDeleteNote(
   const [note] = await db
     .update(notes)
     .set({ isTrashed: true, trashedAt: new Date() })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId), eq(notes.isTrashed, false)))
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning()
   return note ?? null
 }
@@ -77,7 +78,7 @@ export async function restoreNote(
   const [note] = await db
     .update(notes)
     .set({ isTrashed: false, trashedAt: null })
-    .where(and(eq(notes.id, noteId), eq(notes.userId, userId), eq(notes.isTrashed, true)))
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning()
   return note ?? null
 }

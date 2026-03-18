@@ -8,8 +8,12 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const notes = await getNotesForUser(session.user.id)
-  return NextResponse.json(notes)
+  try {
+    const notes = await getNotesForUser(session.user.id)
+    return NextResponse.json(notes)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
@@ -30,6 +34,10 @@ export async function POST(req: Request) {
       { status: 400 }
     )
   }
-  const note = await createNoteForUser(session.user.id, result.data)
-  return NextResponse.json(note, { status: 201 })
+  try {
+    const note = await createNoteForUser(session.user.id, result.data)
+    return NextResponse.json(note, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

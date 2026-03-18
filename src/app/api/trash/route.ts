@@ -7,6 +7,10 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const notes = await getTrashedNotesForUser(session.user.id)
-  return NextResponse.json(notes)
+  try {
+    const notes = await getTrashedNotesForUser(session.user.id)
+    return NextResponse.json(notes)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

@@ -90,7 +90,7 @@ export const notes = pgTable(
   },
   (table) => [
     index('idx_notes_user_id').on(table.userId),
-    index('idx_notes_trashed_at').on(table.trashedAt),
+    index('idx_notes_is_trashed_trashed_at').on(table.isTrashed, table.trashedAt),
   ]
 )
 

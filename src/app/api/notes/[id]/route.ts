@@ -16,11 +16,15 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const { id } = await params
-  const note = await getNoteById(id, session.user.id)
-  if (!note) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  try {
+    const note = await getNoteById(id, session.user.id)
+    if (!note) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    return NextResponse.json(note)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-  return NextResponse.json(note)
 }
 
 export async function PATCH(
@@ -45,11 +49,15 @@ export async function PATCH(
     )
   }
   const { id } = await params
-  const note = await updateNote(id, session.user.id, result.data)
-  if (!note) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  try {
+    const note = await updateNote(id, session.user.id, result.data)
+    if (!note) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    return NextResponse.json(note)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-  return NextResponse.json(note)
 }
 
 export async function DELETE(
@@ -61,9 +69,13 @@ export async function DELETE(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const { id } = await params
-  const note = await softDeleteNote(id, session.user.id)
-  if (!note) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  try {
+    const note = await softDeleteNote(id, session.user.id)
+    if (!note) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    return NextResponse.json(note)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-  return NextResponse.json(note)
 }
