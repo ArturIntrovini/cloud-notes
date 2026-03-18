@@ -4,6 +4,8 @@ import {
   timestamp,
   integer,
   primaryKey,
+  boolean,
+  index,
 } from 'drizzle-orm/pg-core'
 import type { AdapterAccountType } from 'next-auth/adapters'
 
@@ -66,6 +68,35 @@ export const verificationTokens = pgTable(
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 )
 
+// --- Notes table ---
+export const notes = pgTable(
+  'notes',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    title: text('title').notNull().default(''),
+    content: text('content').notNull().default(''),
+    isTrashed: boolean('is_trashed').notNull().default(false),
+    trashedAt: timestamp('trashed_at', { mode: 'date' }),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    index('idx_notes_user_id').on(table.userId),
+    index('idx_notes_trashed_at').on(table.trashedAt),
+  ]
+)
+
 // --- TypeScript type exports ---
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
+
+export type Note = typeof notes.$inferSelect
+export type NewNote = typeof notes.$inferInsert

@@ -15,6 +15,13 @@
       "when": 1773860400000,
       "tag": "0001_rename_hashed_password",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773845079495,
+      "tag": "0002_acoustic_mephisto",
+      "breakpoints": true
     }
   ]
 }
