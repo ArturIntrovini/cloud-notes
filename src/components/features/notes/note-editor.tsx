@@ -20,6 +20,8 @@ export function NoteEditor({ note }: NoteEditorProps) {
   const titleRef = useRef<string>(note.title)
   const contentRef = useRef<string>(note.content)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -31,6 +33,13 @@ export function NoteEditor({ note }: NoteEditorProps) {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      // Abort in-flight save to prevent setState on unmounted component
+      abortControllerRef.current?.abort()
+      // Cancel pending retry
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current)
+        retryTimerRef.current = null
+      }
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
         debounceTimerRef.current = null
@@ -40,6 +49,18 @@ export function NoteEditor({ note }: NoteEditorProps) {
 
   async function saveNote() {
     if (isSavingRef.current) return
+
+    // Cancel any pending retry
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current)
+      retryTimerRef.current = null
+    }
+
+    // Abort any previous in-flight request and create new controller
+    abortControllerRef.current?.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     isSavingRef.current = true
     setSaveStatus('saving')
     try {
@@ -47,12 +68,21 @@ export function NoteEditor({ note }: NoteEditorProps) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: titleRef.current, content: contentRef.current }),
+        signal: controller.signal,
       })
       if (!res.ok) throw new Error('Save failed')
       setSaveStatus('saved')
       isDirtyRef.current = false
-    } catch {
+    } catch (err) {
+      // Ignore AbortError — component unmounted, do NOT setState
+      if (err instanceof Error && err.name === 'AbortError') return
       setSaveStatus('error')
+      // Auto-retry after 3 seconds — skip if content is no longer dirty
+      retryTimerRef.current = setTimeout(() => {
+        retryTimerRef.current = null
+        if (!isDirtyRef.current) return
+        saveNote()
+      }, 3000)
     } finally {
       isSavingRef.current = false
     }
@@ -76,7 +106,9 @@ export function NoteEditor({ note }: NoteEditorProps) {
     }
     if (isDirtyRef.current) {
       await saveNote()
-      if (isDirtyRef.current) return
+      if (isDirtyRef.current) {
+        if (!window.confirm("Cloud Notes couldn't save your changes. Leave anyway?")) return
+      }
     }
     router.push('/notes')
   }
@@ -85,6 +117,10 @@ export function NoteEditor({ note }: NoteEditorProps) {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
       debounceTimerRef.current = null
+    }
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current)
+      retryTimerRef.current = null
     }
     // Clear dirty flag so any in-flight save does not race with the DELETE
     isDirtyRef.current = false

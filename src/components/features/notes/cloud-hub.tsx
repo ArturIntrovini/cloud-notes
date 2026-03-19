@@ -71,14 +71,25 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
       idle: '',
       saving: 'Saving…',
       saved: 'Saved',
-      error: 'Could not save',
+      error: 'Could not save now. Trying again…',
     }[saveStatus]
+
+    const isAnimated = saveStatus === 'saved'
 
     return (
       <div role="status" aria-label="Sync state" className="flex items-center gap-2">
         <CloudIcon className="w-5 h-5 text-primary" aria-hidden={true} />
         {statusText && (
-          <span className="text-xs text-neutral-400">{statusText}</span>
+          <span
+            key={saveStatus}
+            className={`text-xs text-neutral-400 ${
+              isAnimated
+                ? 'animate-[save-fade_2s_ease-in-out_forwards] motion-reduce:animate-none'
+                : ''
+            }`}
+          >
+            {statusText}
+          </span>
         )}
       </div>
     )
