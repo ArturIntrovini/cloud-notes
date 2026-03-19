@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Note } from '@/server/db'
+import { CloudHub, SaveStatus } from '@/components/features/notes/cloud-hub'
 
 export type NoteEditorProps = {
   note: Note
@@ -12,7 +13,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
   const router = useRouter()
   const [title, setTitle] = useState(note.title)
   const [content, setContent] = useState(note.content)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [trashing, setTrashing] = useState(false)
   const isDirtyRef = useRef<boolean>(false)
   const isSavingRef = useRef<boolean>(false)
@@ -108,9 +109,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
           ← Back
         </button>
         <div className="flex items-center gap-3">
-          {saveStatus === 'saving' && <span className="text-xs text-neutral-500">Saving…</span>}
-          {saveStatus === 'saved' && <span className="text-xs text-neutral-500">Saved</span>}
-          {saveStatus === 'error' && <span className="text-xs text-danger">Could not save</span>}
+          <CloudHub mode="editor" saveStatus={saveStatus} />
           <button
             onClick={trashNote}
             disabled={trashing}
