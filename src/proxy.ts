@@ -21,7 +21,8 @@ export default auth((req) => {
   // Page routes: redirect to sign-in with callbackUrl (AC #1, #2)
   const isPrivatePage =
     pathname.startsWith("/notes") ||
-    pathname.startsWith("/trash")
+    pathname.startsWith("/trash") ||
+    pathname.startsWith("/profile")
 
   if (isPrivatePage && !isLoggedIn) {
     const callbackUrl = encodeURIComponent(pathname + req.nextUrl.search)
@@ -37,6 +38,7 @@ export const config = {
     "/notes/:path*",
     "/trash",
     "/trash/:path*",
+    "/profile",
     "/api/notes",
     "/api/notes/:path*",
     "/api/trash",

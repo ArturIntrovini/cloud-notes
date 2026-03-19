@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { signOut } from 'next-auth/react'
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -49,6 +48,7 @@ function UserIcon({ className, 'aria-hidden': ariaHidden }: { className?: string
 export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dockRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const router = useRouter()
   const [prevSaveStatus, setPrevSaveStatus] = useState<SaveStatus>(saveStatus)
   const [displayText, setDisplayText] = useState('')
@@ -79,11 +79,27 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
         setIsOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setIsOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    // Move focus to first dock button after dock opens
+    const firstBtn = dockRef.current?.querySelector<HTMLButtonElement>('button:not([tabindex="-1"])')
+    if (firstBtn) {
+      firstBtn.focus()
+    } else {
+      triggerRef.current?.focus()
+    }
+
     document.addEventListener('mousedown', handleOutside)
     document.addEventListener('touchstart', handleOutside)
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('mousedown', handleOutside)
       document.removeEventListener('touchstart', handleOutside)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
 
@@ -116,39 +132,51 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
   return (
     <div ref={dockRef} className="relative flex flex-col items-center">
       <button
+        ref={triggerRef}
         onClick={() => setIsOpen((prev) => !prev)}
-        aria-label="Open main menu"
+        aria-label={isOpen ? "Close main menu" : "Open main menu"}
         aria-expanded={isOpen}
-        className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-primary text-white"
+        aria-haspopup="true"
+        aria-controls="cloud-hub-dock"
+        className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-primary text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <CloudIcon className="w-6 h-6" aria-hidden={true} />
       </button>
 
       <div
-        className={`absolute top-full mt-2 flex gap-2 bg-surface-elevated rounded-2xl p-3 shadow-lg transition-all duration-150 ${
+        id="cloud-hub-dock"
+        role="menu"
+        aria-hidden={!isOpen}
+        className={`absolute top-full mt-2 flex gap-2 bg-surface-elevated rounded-2xl p-3 shadow-lg transition-all duration-150 motion-reduce:transition-none ${
           isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
         }`}
       >
         <button
+          role="menuitem"
+          tabIndex={isOpen ? undefined : -1}
           onClick={() => { router.push('/notes/new'); setIsOpen(false) }}
           aria-label="New Note"
-          className="flex flex-col items-center gap-1 text-xs text-primary min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary-soft transition-colors px-3 py-2"
+          className="flex flex-col items-center gap-1 text-xs text-primary min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary-soft transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
         >
           <PlusIcon className="w-5 h-5" aria-hidden={true} />
           <span>New</span>
         </button>
         <button
+          role="menuitem"
+          tabIndex={isOpen ? undefined : -1}
           onClick={() => { router.push('/trash'); setIsOpen(false) }}
           aria-label="Trash"
-          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 min-h-[44px] min-w-[44px] rounded-xl hover:bg-surface transition-colors px-3 py-2"
+          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 min-h-[44px] min-w-[44px] rounded-xl hover:bg-surface transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
         >
           <TrashIcon className="w-5 h-5" aria-hidden={true} />
           <span>Trash</span>
         </button>
         <button
-          onClick={() => { setIsOpen(false); signOut({ callbackUrl: '/sign-in' }) }}
-          aria-label="Sign out"
-          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 min-h-[44px] min-w-[44px] rounded-xl hover:bg-surface transition-colors px-3 py-2"
+          role="menuitem"
+          tabIndex={isOpen ? undefined : -1}
+          onClick={() => { router.push('/profile'); setIsOpen(false) }}
+          aria-label="Profile"
+          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 min-h-[44px] min-w-[44px] rounded-xl hover:bg-surface transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
         >
           <UserIcon className="w-5 h-5" aria-hidden={true} />
           <span>Profile</span>

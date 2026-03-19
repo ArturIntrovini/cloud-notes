@@ -212,6 +212,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
                       <button
                         onClick={() => handleRestore(note.id)}
                         disabled={isBusy}
+                        aria-label={`Restore "${displayTitle}"`}
                         className="text-primary text-sm font-medium disabled:opacity-60 min-h-[44px] min-w-[44px] flex items-center justify-center px-2"
                       >
                         {isRestoring ? 'Restoring…' : 'Restore'}
@@ -219,6 +220,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
                       <button
                         onClick={() => handleDelete(note.id)}
                         disabled={isBusy}
+                        aria-label={`Delete "${displayTitle}" permanently`}
                         className="text-danger text-sm font-medium disabled:opacity-60 min-h-[44px] min-w-[44px] flex items-center justify-center px-2"
                       >
                         {isDeleting ? 'Deleting…' : 'Delete'}

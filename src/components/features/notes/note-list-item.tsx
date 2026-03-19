@@ -56,14 +56,15 @@ export function NoteListItem({ note }: NoteListItemProps) {
 
   return (
     <li className="bg-surface-elevated rounded-xl px-4 py-3 flex items-start justify-between gap-3">
-      <Link href={`/notes/${note.id}`} className="flex flex-col gap-1 flex-1 min-w-0">
-        <span className="text-base font-semibold text-neutral-900 truncate">{displayTitle}</span>
+      <Link href={`/notes/${note.id}`} aria-labelledby={`note-title-${note.id}`} className="flex flex-col gap-1 flex-1 min-w-0 min-h-[44px]">
+        <span id={`note-title-${note.id}`} className="text-base font-semibold text-neutral-900 truncate">{displayTitle}</span>
         <span className="text-sm text-neutral-500 line-clamp-2">{snippet}</span>
         <span className="text-xs text-neutral-500">{formattedDate}</span>
       </Link>
       <button
         onClick={handleTrash}
         disabled={trashing}
+        aria-label={`Move "${displayTitle}" to Trash`}
         className="text-danger text-sm shrink-0 disabled:opacity-60 min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         {trashing ? 'Moving…' : 'Move to Trash'}
