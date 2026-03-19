@@ -13,7 +13,7 @@ export function NoteList({ notes }: NoteListProps) {
         <p>No notes yet</p>
         <Link
           href="/notes/new"
-          className="bg-primary text-white rounded-lg px-4 py-2 text-sm font-semibold"
+          className="bg-primary text-white rounded-lg px-4 py-2 text-sm font-semibold min-h-[44px] inline-flex items-center"
         >
           New Note
         </Link>
@@ -26,7 +26,7 @@ export function NoteList({ notes }: NoteListProps) {
       <div className="flex justify-end">
         <Link
           href="/notes/new"
-          className="bg-primary text-white rounded-lg px-4 py-2 text-sm font-semibold"
+          className="bg-primary text-white rounded-lg px-4 py-2 text-sm font-semibold min-h-[44px] inline-flex items-center"
         >
           New Note
         </Link>

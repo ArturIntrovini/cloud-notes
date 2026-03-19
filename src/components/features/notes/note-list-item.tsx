@@ -64,7 +64,7 @@ export function NoteListItem({ note }: NoteListItemProps) {
       <button
         onClick={handleTrash}
         disabled={trashing}
-        className="text-danger text-sm shrink-0 disabled:opacity-60"
+        className="text-danger text-sm shrink-0 disabled:opacity-60 min-h-[44px] min-w-[44px] flex items-center justify-center"
       >
         {trashing ? 'Moving…' : 'Move to Trash'}
       </button>

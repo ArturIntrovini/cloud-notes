@@ -35,7 +35,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/notes" className="text-primary text-sm font-medium">← Back to Notes</Link>
+      <Link href="/notes" className="text-primary text-sm font-medium min-h-[44px] inline-flex items-center">← Back to Notes</Link>
       {notes.length === 0 ? (
         <p className="text-neutral-500 text-sm py-8 text-center">Trash is empty</p>
       ) : (
@@ -55,7 +55,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
                 <button
                   onClick={() => handleRestore(note.id)}
                   disabled={restoring !== null}
-                  className="text-primary text-sm font-medium shrink-0 disabled:opacity-60"
+                  className="text-primary text-sm font-medium shrink-0 disabled:opacity-60 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   {isRestoring ? 'Restoring…' : 'Restore'}
                 </button>

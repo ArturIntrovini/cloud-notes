@@ -140,7 +140,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
       <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-500/20">
         <button
           onClick={handleBack}
-          className="text-primary text-sm font-medium px-3 py-2"
+          className="text-primary text-sm font-medium px-3 py-2 min-h-[44px] flex items-center"
         >
           ← Back
         </button>
@@ -149,7 +149,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
           <button
             onClick={trashNote}
             disabled={trashing}
-            className="text-danger text-sm disabled:opacity-60"
+            className="text-danger text-sm disabled:opacity-60 min-h-[44px] flex items-center"
           >
             {trashing ? 'Moving…' : 'Move to Trash'}
           </button>
