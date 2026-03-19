@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getNotesForUser } from '@/server/services/notes.service'
 import { NoteList } from '@/components/features/notes/note-list'
 import { signOutAction } from './actions'
+import Link from 'next/link'
 
 export default async function NotesPage() {
   const session = await auth()
@@ -16,6 +17,7 @@ export default async function NotesPage() {
       <form action={signOutAction}>
         <button type="submit">Sign out</button>
       </form>
+      <Link href="/trash">Trash</Link>
       <NoteList notes={notes} />
     </main>
   )

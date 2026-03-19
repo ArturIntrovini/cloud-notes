@@ -13,6 +13,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title)
   const [content, setContent] = useState(note.content)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [trashing, setTrashing] = useState(false)
   const isDirtyRef = useRef<boolean>(false)
   const isSavingRef = useRef<boolean>(false)
   const titleRef = useRef<string>(note.title)
@@ -79,10 +80,29 @@ export function NoteEditor({ note }: NoteEditorProps) {
     router.push('/notes')
   }
 
+  async function trashNote() {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
+    // Clear dirty flag so any in-flight save does not race with the DELETE
+    isDirtyRef.current = false
+    setTrashing(true)
+    try {
+      const res = await fetch(`/api/notes/${note.id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Trash failed')
+      router.push('/notes')
+    } catch {
+      // Silent fail — full error UX in Story 3.3
+      setTrashing(false)
+    }
+  }
+
   return (
     <div>
       <header>
         <button onClick={handleBack}>← Back</button>
+        <button onClick={trashNote} disabled={trashing}>{trashing ? 'Moving…' : 'Move to Trash'}</button>
         {saveStatus === 'saving' && <span>Saving…</span>}
         {saveStatus === 'saved' && <span>Saved</span>}
         {saveStatus === 'error' && <span>Could not save</span>}
