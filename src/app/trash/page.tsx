@@ -13,9 +13,11 @@ export default async function TrashPage() {
   const notes = await getTrashedNotesForUser(session.user.id)
 
   return (
-    <main>
-      <h1>Trash</h1>
-      <TrashView initialNotes={notes} />
+    <main className="min-h-screen bg-surface">
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <h1 className="text-2xl font-semibold text-neutral-900 mb-6">Trash</h1>
+        <TrashView initialNotes={notes} />
+      </div>
     </main>
   )
 }

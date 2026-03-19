@@ -34,12 +34,12 @@ export function TrashView({ initialNotes }: TrashViewProps) {
   }
 
   return (
-    <div>
-      <Link href="/notes">← Back to Notes</Link>
+    <div className="flex flex-col gap-4">
+      <Link href="/notes" className="text-primary text-sm font-medium">← Back to Notes</Link>
       {notes.length === 0 ? (
-        <p>Trash is empty</p>
+        <p className="text-neutral-500 text-sm py-8 text-center">Trash is empty</p>
       ) : (
-        <ul>
+        <ul className="flex flex-col gap-2">
           {notes.map((note) => {
             const displayTitle = note.title.trim() || 'Untitled'
             const days = note.trashedAt ? daysUntilDeletion(note.trashedAt) : 30
@@ -47,10 +47,16 @@ export function TrashView({ initialNotes }: TrashViewProps) {
             const isRestoring = restoring === note.id
 
             return (
-              <li key={note.id}>
-                <span>{displayTitle}</span>
-                <span>{daysLabel}</span>
-                <button onClick={() => handleRestore(note.id)} disabled={restoring !== null}>
+              <li key={note.id} className="bg-surface-elevated rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-base font-semibold text-neutral-900 truncate">{displayTitle}</span>
+                  <span className="text-sm text-neutral-500">{daysLabel}</span>
+                </div>
+                <button
+                  onClick={() => handleRestore(note.id)}
+                  disabled={restoring !== null}
+                  className="text-primary text-sm font-medium shrink-0 disabled:opacity-60"
+                >
                   {isRestoring ? 'Restoring…' : 'Restore'}
                 </button>
               </li>

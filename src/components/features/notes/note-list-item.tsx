@@ -48,20 +48,24 @@ export function NoteListItem({ note }: NoteListItemProps) {
 
   if (trashed) {
     return (
-      <li>
-        <span>Moved to Trash</span>
+      <li className="bg-surface-elevated rounded-xl px-4 py-3">
+        <span className="text-sm text-neutral-500">Moved to Trash</span>
       </li>
     )
   }
 
   return (
-    <li>
-      <Link href={`/notes/${note.id}`}>
-        <span>{displayTitle}</span>
-        <span>{snippet}</span>
-        <span>{formattedDate}</span>
+    <li className="bg-surface-elevated rounded-xl px-4 py-3 flex items-start justify-between gap-3">
+      <Link href={`/notes/${note.id}`} className="flex flex-col gap-1 flex-1 min-w-0">
+        <span className="text-base font-semibold text-neutral-900 truncate">{displayTitle}</span>
+        <span className="text-sm text-neutral-500 line-clamp-2">{snippet}</span>
+        <span className="text-xs text-neutral-500">{formattedDate}</span>
       </Link>
-      <button onClick={handleTrash} disabled={trashing}>
+      <button
+        onClick={handleTrash}
+        disabled={trashing}
+        className="text-danger text-sm shrink-0 disabled:opacity-60"
+      >
         {trashing ? 'Moving…' : 'Move to Trash'}
       </button>
     </li>

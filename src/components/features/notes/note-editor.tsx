@@ -99,39 +99,56 @@ export function NoteEditor({ note }: NoteEditorProps) {
   }
 
   return (
-    <div>
-      <header>
-        <button onClick={handleBack}>← Back</button>
-        <button onClick={trashNote} disabled={trashing}>{trashing ? 'Moving…' : 'Move to Trash'}</button>
-        {saveStatus === 'saving' && <span>Saving…</span>}
-        {saveStatus === 'saved' && <span>Saved</span>}
-        {saveStatus === 'error' && <span>Could not save</span>}
+    <div className="min-h-screen bg-surface flex flex-col">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-500/20">
+        <button
+          onClick={handleBack}
+          className="text-primary text-sm font-medium px-3 py-2"
+        >
+          ← Back
+        </button>
+        <div className="flex items-center gap-3">
+          {saveStatus === 'saving' && <span className="text-xs text-neutral-500">Saving…</span>}
+          {saveStatus === 'saved' && <span className="text-xs text-neutral-500">Saved</span>}
+          {saveStatus === 'error' && <span className="text-xs text-danger">Could not save</span>}
+          <button
+            onClick={trashNote}
+            disabled={trashing}
+            className="text-danger text-sm disabled:opacity-60"
+          >
+            {trashing ? 'Moving…' : 'Move to Trash'}
+          </button>
+        </div>
       </header>
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => {
-          setTitle(e.target.value)
-          titleRef.current = e.target.value
-          isDirtyRef.current = true
-          setSaveStatus('idle')
-          scheduleAutoSave()
-        }}
-        placeholder="Title"
-        aria-label="Note title"
-      />
-      <textarea
-        value={content}
-        onChange={(e) => {
-          setContent(e.target.value)
-          contentRef.current = e.target.value
-          isDirtyRef.current = true
-          setSaveStatus('idle')
-          scheduleAutoSave()
-        }}
-        placeholder="Start writing…"
-        aria-label="Note content"
-      />
+      <div className="flex flex-col flex-1 max-w-2xl mx-auto w-full px-4 py-4 gap-3">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value)
+            titleRef.current = e.target.value
+            isDirtyRef.current = true
+            setSaveStatus('idle')
+            scheduleAutoSave()
+          }}
+          placeholder="Title"
+          aria-label="Note title"
+          className="text-xl font-semibold text-neutral-900 bg-transparent border-none outline-none placeholder:text-neutral-500 w-full"
+        />
+        <textarea
+          value={content}
+          onChange={(e) => {
+            setContent(e.target.value)
+            contentRef.current = e.target.value
+            isDirtyRef.current = true
+            setSaveStatus('idle')
+            scheduleAutoSave()
+          }}
+          placeholder="Start writing…"
+          aria-label="Note content"
+          className="flex-1 text-base leading-relaxed text-neutral-900 bg-transparent border-none outline-none resize-none placeholder:text-neutral-500 w-full min-h-[60vh]"
+        />
+      </div>
     </div>
   )
 }
