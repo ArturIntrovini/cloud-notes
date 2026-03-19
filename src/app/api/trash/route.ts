@@ -1,6 +1,10 @@
 import { auth } from '@/server/auth'
 import { NextResponse } from 'next/server'
-import { getTrashedNotesForUser } from '@/server/services/notes.service'
+import {
+  getTrashedNotesForUser,
+  permanentlyDeleteNotes,
+  emptyTrash,
+} from '@/server/services/notes.service'
 
 export async function GET() {
   const session = await auth()
@@ -10,6 +14,28 @@ export async function GET() {
   try {
     const notes = await getTrashedNotesForUser(session.user.id)
     return NextResponse.json(notes)
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: Request) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  let ids: string[] | undefined
+  try {
+    const body = await req.json()
+    if (Array.isArray(body?.ids)) ids = body.ids
+  } catch {
+    // no body — delete all
+  }
+  try {
+    const deleted = ids !== undefined
+      ? await permanentlyDeleteNotes(ids, session.user.id)
+      : await emptyTrash(session.user.id)
+    return NextResponse.json({ deleted })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

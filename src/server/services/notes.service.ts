@@ -1,6 +1,6 @@
 import { db, notes } from '@/server/db'
 import type { Note } from '@/server/db'
-import { and, eq, lt, isNotNull, desc } from 'drizzle-orm'
+import { and, eq, lt, isNotNull, inArray, desc } from 'drizzle-orm'
 import type { CreateNoteInput, UpdateNoteInput } from '@/lib/validations/notes'
 
 export async function getNotesForUser(userId: string): Promise<Note[]> {
@@ -81,6 +81,37 @@ export async function restoreNote(
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning()
   return note ?? null
+}
+
+export async function permanentlyDeleteNote(
+  noteId: string,
+  userId: string
+): Promise<Note | null> {
+  const [note] = await db
+    .delete(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId), eq(notes.isTrashed, true)))
+    .returning()
+  return note ?? null
+}
+
+export async function permanentlyDeleteNotes(
+  noteIds: string[],
+  userId: string
+): Promise<number> {
+  if (noteIds.length === 0) return 0
+  const deleted = await db
+    .delete(notes)
+    .where(and(inArray(notes.id, noteIds), eq(notes.userId, userId), eq(notes.isTrashed, true)))
+    .returning()
+  return deleted.length
+}
+
+export async function emptyTrash(userId: string): Promise<number> {
+  const deleted = await db
+    .delete(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.isTrashed, true)))
+    .returning()
+  return deleted.length
 }
 
 export async function purgeTrashedNotes(cutoffDate: Date): Promise<number> {

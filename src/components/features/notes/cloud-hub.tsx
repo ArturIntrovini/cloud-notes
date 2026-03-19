@@ -50,6 +50,27 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dockRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+  const [prevSaveStatus, setPrevSaveStatus] = useState<SaveStatus>(saveStatus)
+  const [displayText, setDisplayText] = useState('')
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  // Derived-state-from-props pattern: update display state when saveStatus changes.
+  // Calling setState during render (guarded by prevSaveStatus !== saveStatus) is the
+  // React-sanctioned approach for deriving state from props without useEffect.
+  if (prevSaveStatus !== saveStatus) {
+    setPrevSaveStatus(saveStatus)
+    if (saveStatus === 'saving') {
+      setDisplayText('Saving…')
+      setIsAnimating(false)
+    } else if (saveStatus === 'saved') {
+      setDisplayText('Saved')
+      setIsAnimating(true)
+    } else if (saveStatus === 'error') {
+      setDisplayText('Could not save now. Trying again…')
+      setIsAnimating(false)
+    }
+    // When 'idle': do NOT clear — let onAnimationEnd handle it naturally
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -66,29 +87,25 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
     }
   }, [isOpen])
 
+  function handleAnimationEnd() {
+    setDisplayText('')
+    setIsAnimating(false)
+  }
+
   if (mode === 'editor') {
-    const statusText = {
-      idle: '',
-      saving: 'Saving…',
-      saved: 'Saved',
-      error: 'Could not save now. Trying again…',
-    }[saveStatus]
-
-    const isAnimated = saveStatus === 'saved'
-
     return (
       <div role="status" aria-label="Sync state" className="flex items-center gap-2">
         <CloudIcon className="w-5 h-5 text-primary" aria-hidden={true} />
-        {statusText && (
+        {displayText && (
           <span
-            key={saveStatus}
             className={`text-xs text-neutral-400 ${
-              isAnimated
+              isAnimating
                 ? 'animate-[save-fade_2s_ease-in-out_forwards] motion-reduce:animate-none'
                 : ''
             }`}
+            onAnimationEnd={handleAnimationEnd}
           >
-            {statusText}
+            {displayText}
           </span>
         )}
       </div>
