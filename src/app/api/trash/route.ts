@@ -1,21 +1,26 @@
 import { auth } from '@/server/auth'
 import { NextResponse } from 'next/server'
 import {
-  getTrashedNotesForUser,
+  getTrashedNotesForUserPaginated,
   healNullTrashedAt,
   permanentlyDeleteNotes,
   emptyTrash,
 } from '@/server/services/notes.service'
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
+    const { searchParams } = new URL(req.url)
+    const rawPage = parseInt(searchParams.get('page') ?? '0', 10)
+    const page = Math.min(9999, Math.max(0, Number.isNaN(rawPage) ? 0 : rawPage))
+    const rawPageSize = parseInt(searchParams.get('pageSize') ?? '50', 10)
+    const pageSize = Math.min(50, Math.max(1, Number.isNaN(rawPageSize) ? 50 : rawPageSize))
     await healNullTrashedAt(session.user.id)
-    const notes = await getTrashedNotesForUser(session.user.id)
-    return NextResponse.json(notes)
+    const result = await getTrashedNotesForUserPaginated(session.user.id, page, pageSize)
+    return NextResponse.json(result)
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

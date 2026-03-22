@@ -7,6 +7,7 @@ import type { Note } from '@/server/db'
 
 export type TrashViewProps = {
   initialNotes: Note[]
+  initialNextPage: number | null
 }
 
 function daysUntilDeletion(trashedAt: Date): number {
@@ -15,7 +16,7 @@ function daysUntilDeletion(trashedAt: Date): number {
   return Math.min(31, Math.max(0, 31 - daysSinceTrash))
 }
 
-export function TrashView({ initialNotes }: TrashViewProps) {
+export function TrashView({ initialNotes, initialNextPage }: TrashViewProps) {
   const router = useRouter()
   const [notes, setNotes] = useState(initialNotes)
   const [restoring, setRestoring] = useState<string | null>(null)
@@ -23,6 +24,8 @@ export function TrashView({ initialNotes }: TrashViewProps) {
   const [deletingBulk, setDeletingBulk] = useState(false)
   const [isSelecting, setIsSelecting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [nextPage, setNextPage] = useState<number | null>(initialNextPage)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const isBusy = restoring !== null || deleting !== null || deletingBulk
   const allSelected = notes.length > 0 && selected.size === notes.length
@@ -33,6 +36,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
       const res = await fetch(`/api/notes/${noteId}/restore`, { method: 'PATCH' })
       if (!res.ok) throw new Error('Restore failed')
       setNotes((prev) => prev.filter((n) => n.id !== noteId))
+      setNextPage(null)
       setRestoring(null)
       router.refresh()
     } catch {
@@ -46,6 +50,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
       const res = await fetch(`/api/notes/${noteId}/permanent`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       setNotes((prev) => prev.filter((n) => n.id !== noteId))
+      setNextPage(null)
       router.refresh()
     } catch {
       // silently fail — note stays in list
@@ -66,6 +71,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
       })
       if (!res.ok) throw new Error('Delete failed')
       setNotes((prev) => prev.filter((n) => !selected.has(n.id)))
+      setNextPage(null)
       setSelected(new Set())
       setIsSelecting(false)
       router.refresh()
@@ -82,6 +88,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
       const res = await fetch('/api/trash', { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       setNotes([])
+      setNextPage(null)
       setSelected(new Set())
       setIsSelecting(false)
       router.refresh()
@@ -108,6 +115,22 @@ export function TrashView({ initialNotes }: TrashViewProps) {
   function exitSelectMode() {
     setIsSelecting(false)
     setSelected(new Set())
+  }
+
+  async function loadMore() {
+    if (nextPage === null || isLoadingMore) return
+    setIsLoadingMore(true)
+    try {
+      const res = await fetch(`/api/trash?page=${nextPage}&pageSize=50`)
+      if (!res.ok) throw new Error('Failed to load more')
+      const data: { notes: Note[]; nextPage: number | null } = await res.json()
+      setNotes((prev) => [...prev, ...data.notes])
+      setNextPage(data.nextPage)
+    } catch (err) {
+      console.error('[TrashView] loadMore failed', err)
+    } finally {
+      setIsLoadingMore(false)
+    }
   }
 
   return (
@@ -178,6 +201,7 @@ export function TrashView({ initialNotes }: TrashViewProps) {
           <p className="text-sm text-neutral-500">Notes in trash for over 30 days are removed permanently</p>
         </div>
       ) : (
+        <>
         <ul className="flex flex-col gap-2">
           {notes.map((note) => {
             const displayTitle = note.title.trim() || 'Untitled'
@@ -232,6 +256,18 @@ export function TrashView({ initialNotes }: TrashViewProps) {
             )
           })}
         </ul>
+        {nextPage !== null && (
+          <div className="flex justify-center">
+            <button
+              onClick={loadMore}
+              disabled={isLoadingMore || isBusy}
+              className="text-primary text-sm font-medium min-h-[44px] px-4 flex items-center disabled:opacity-60"
+            >
+              {isLoadingMore ? 'Loading…' : 'Load more'}
+            </button>
+          </div>
+        )}
+        </>
       )}
     </div>
   )
