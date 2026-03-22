@@ -1,6 +1,6 @@
 import { db, notes } from '@/server/db'
 import type { Note } from '@/server/db'
-import { and, eq, lt, isNotNull, inArray, desc } from 'drizzle-orm'
+import { and, eq, lt, isNull, or, inArray, desc } from 'drizzle-orm'
 import type { CreateNoteInput, UpdateNoteInput } from '@/lib/validations/notes'
 
 export async function getNotesForUser(userId: string): Promise<Note[]> {
@@ -71,6 +71,13 @@ export async function getTrashedNotesForUser(userId: string): Promise<Note[]> {
     .orderBy(desc(notes.trashedAt))
 }
 
+export async function healNullTrashedAt(userId: string): Promise<void> {
+  await db
+    .update(notes)
+    .set({ trashedAt: new Date() })
+    .where(and(eq(notes.userId, userId), eq(notes.isTrashed, true), isNull(notes.trashedAt)))
+}
+
 export async function restoreNote(
   noteId: string,
   userId: string
@@ -120,8 +127,10 @@ export async function purgeTrashedNotes(cutoffDate: Date): Promise<number> {
     .where(
       and(
         eq(notes.isTrashed, true),
-        isNotNull(notes.trashedAt),
-        lt(notes.trashedAt, cutoffDate)
+        or(
+          isNull(notes.trashedAt),           // stranded anomaly rows (isTrashed=true, trashedAt=null)
+          lt(notes.trashedAt, cutoffDate)    // normal expiry: trashedAt older than 31 days
+        )
       )
     )
     .returning()

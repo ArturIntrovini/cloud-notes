@@ -2,6 +2,7 @@ import { auth } from '@/server/auth'
 import { NextResponse } from 'next/server'
 import {
   getTrashedNotesForUser,
+  healNullTrashedAt,
   permanentlyDeleteNotes,
   emptyTrash,
 } from '@/server/services/notes.service'
@@ -12,6 +13,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
+    await healNullTrashedAt(session.user.id)
     const notes = await getTrashedNotesForUser(session.user.id)
     return NextResponse.json(notes)
   } catch {
