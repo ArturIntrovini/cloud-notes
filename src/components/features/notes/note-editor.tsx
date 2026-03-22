@@ -16,7 +16,8 @@ export function NoteEditor({ note }: NoteEditorProps) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [trashing, setTrashing] = useState(false)
   const isDirtyRef = useRef<boolean>(false)
-  const isSavingRef = useRef<boolean>(false)
+  const isMountedRef = useRef<boolean>(true)
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve())
   const titleRef = useRef<string>(note.title)
   const contentRef = useRef<string>(note.content)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -33,6 +34,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      isMountedRef.current = false
       // Abort in-flight save to prevent setState on unmounted component
       abortControllerRef.current?.abort()
       // Cancel pending retry
@@ -47,45 +49,63 @@ export function NoteEditor({ note }: NoteEditorProps) {
     }
   }, [])
 
-  async function saveNote() {
-    if (isSavingRef.current) return
-
-    // Cancel any pending retry
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current)
-      retryTimerRef.current = null
-    }
-
-    // Abort any previous in-flight request and create new controller
-    abortControllerRef.current?.abort()
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-
-    isSavingRef.current = true
-    setSaveStatus('saving')
-    try {
-      const res = await fetch(`/api/notes/${note.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: titleRef.current, content: contentRef.current }),
-        signal: controller.signal,
+  function saveNote(): Promise<void> {
+    // Serializes saves — no concurrent saves possible.
+    // .catch absorbs prior rejections to keep chain live; logs unexpected errors.
+    saveQueueRef.current = saveQueueRef.current
+      .catch((err) => {
+        if (!(err instanceof Error && err.name === 'AbortError')) {
+          console.error('[NoteEditor] save queue error:', err)
+        }
       })
-      if (!res.ok) throw new Error('Save failed')
-      setSaveStatus('saved')
-      isDirtyRef.current = false
-    } catch (err) {
-      // Ignore AbortError — component unmounted, do NOT setState
-      if (err instanceof Error && err.name === 'AbortError') return
-      setSaveStatus('error')
-      // Auto-retry after 3 seconds — skip if content is no longer dirty
-      retryTimerRef.current = setTimeout(() => {
-        retryTimerRef.current = null
-        if (!isDirtyRef.current) return
-        saveNote()
-      }, 3000)
-    } finally {
-      isSavingRef.current = false
-    }
+      .then(async () => {
+        // Abandon queued saves after unmount — prevents post-unmount network requests and state updates.
+        if (!isMountedRef.current) return
+
+        // Cancel any pending retry
+        if (retryTimerRef.current) {
+          clearTimeout(retryTimerRef.current)
+          retryTimerRef.current = null
+        }
+
+        // Abort any previous in-flight request and create new controller
+        abortControllerRef.current?.abort()
+        const controller = new AbortController()
+        abortControllerRef.current = controller
+
+        setSaveStatus('saving')
+        let didSettle = false
+        try {
+          const res = await fetch(`/api/notes/${note.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: titleRef.current, content: contentRef.current }),
+            signal: controller.signal,
+          })
+          if (!res.ok) throw new Error('Save failed')
+          if (!isMountedRef.current) { didSettle = true; return }
+          setSaveStatus('saved')
+          isDirtyRef.current = false
+          didSettle = true
+        } catch (err) {
+          // Ignore AbortError — fetch was intentionally cancelled
+          if (err instanceof Error && err.name === 'AbortError') { didSettle = true; return }
+          if (!isMountedRef.current) { didSettle = true; return }
+          setSaveStatus('error')
+          didSettle = true
+          // Auto-retry after 3 seconds — skip if content is no longer dirty
+          retryTimerRef.current = setTimeout(() => {
+            retryTimerRef.current = null
+            if (!isMountedRef.current) return
+            if (!isDirtyRef.current) return
+            saveNote().catch(() => {})
+          }, 3000)
+        } finally {
+          // Safety net: reset stuck 'saving' status on unexpected throw
+          if (!didSettle && isMountedRef.current) setSaveStatus('error')
+        }
+      })
+    return saveQueueRef.current
   }
 
   function scheduleAutoSave() {
@@ -95,7 +115,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
     }
     debounceTimerRef.current = setTimeout(() => {
       debounceTimerRef.current = null
-      saveNote()
+      saveNote().catch(() => {})
     }, 1500)
   }
 
