@@ -18,7 +18,7 @@ export function NoteListPaginated({ initialNotes, initialNextPage }: NoteListPag
     if (nextPage === null || isLoadingMore) return
     setIsLoadingMore(true)
     try {
-      const res = await fetch(`/api/notes?page=${nextPage}&pageSize=50`)
+      const res = await fetch(`/api/notes?page=${nextPage}`)
       if (!res.ok) throw new Error('Failed to load more')
       const data: { notes: Note[]; nextPage: number | null } = await res.json()
       setAllNotes((prev) => [...prev, ...data.notes])

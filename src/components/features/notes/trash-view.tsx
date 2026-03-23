@@ -121,7 +121,7 @@ export function TrashView({ initialNotes, initialNextPage }: TrashViewProps) {
     if (nextPage === null || isLoadingMore) return
     setIsLoadingMore(true)
     try {
-      const res = await fetch(`/api/trash?page=${nextPage}&pageSize=50`)
+      const res = await fetch(`/api/trash?page=${nextPage}`)
       if (!res.ok) throw new Error('Failed to load more')
       const data: { notes: Note[]; nextPage: number | null } = await res.json()
       setNotes((prev) => [...prev, ...data.notes])
