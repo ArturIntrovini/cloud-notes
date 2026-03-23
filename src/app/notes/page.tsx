@@ -1,7 +1,7 @@
 import { auth } from '@/server/auth'
 import { redirect } from 'next/navigation'
-import { getNotesForUser } from '@/server/services/notes.service'
-import { NoteList } from '@/components/features/notes/note-list'
+import { getNotesForUserPaginated } from '@/server/services/notes.service'
+import { NoteListPaginated } from '@/components/features/notes/note-list-paginated'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { CloudHub } from '@/components/features/notes/cloud-hub'
 
@@ -9,7 +9,7 @@ export default async function NotesPage() {
   const session = await auth()
   if (!session?.user?.id) redirect('/sign-in')
 
-  const notes = await getNotesForUser(session.user.id)
+  const { notes, nextPage } = await getNotesForUserPaginated(session.user.id, 0, 50)
 
   return (
     <main className="min-h-screen bg-surface">
@@ -21,7 +21,7 @@ export default async function NotesPage() {
         </div>
       </header>
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <NoteList notes={notes} />
+        <NoteListPaginated initialNotes={notes} initialNextPage={nextPage} />
       </div>
     </main>
   )

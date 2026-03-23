@@ -63,6 +63,44 @@ export async function softDeleteNote(
   return note ?? null
 }
 
+export async function getNotesForUserPaginated(
+  userId: string,
+  page: number,
+  pageSize: number
+): Promise<{ notes: Note[]; nextPage: number | null }> {
+  const rows = await db
+    .select()
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.isTrashed, false)))
+    .orderBy(desc(notes.updatedAt))
+    .limit(pageSize + 1)
+    .offset(page * pageSize)
+  const hasNextPage = rows.length > pageSize
+  return {
+    notes: hasNextPage ? rows.slice(0, pageSize) : rows,
+    nextPage: hasNextPage ? page + 1 : null,
+  }
+}
+
+export async function getTrashedNotesForUserPaginated(
+  userId: string,
+  page: number,
+  pageSize: number
+): Promise<{ notes: Note[]; nextPage: number | null }> {
+  const rows = await db
+    .select()
+    .from(notes)
+    .where(and(eq(notes.userId, userId), eq(notes.isTrashed, true)))
+    .orderBy(desc(notes.trashedAt))
+    .limit(pageSize + 1)
+    .offset(page * pageSize)
+  const hasNextPage = rows.length > pageSize
+  return {
+    notes: hasNextPage ? rows.slice(0, pageSize) : rows,
+    nextPage: hasNextPage ? page + 1 : null,
+  }
+}
+
 export async function getTrashedNotesForUser(userId: string): Promise<Note[]> {
   return db
     .select()
