@@ -138,7 +138,7 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-controls="cloud-hub-dock"
-        className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full bg-primary text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+        className="flex items-center justify-center touch-target rounded-full bg-primary text-white focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
       >
         <CloudIcon className="w-6 h-6" aria-hidden={true} />
       </button>
@@ -156,7 +156,7 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
           tabIndex={isOpen ? undefined : -1}
           onClick={() => { router.push('/notes/new'); setIsOpen(false) }}
           aria-label="New Note"
-          className="flex flex-col items-center gap-1 text-xs text-primary min-h-[44px] min-w-[44px] rounded-xl hover:bg-primary-soft transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
+          className="flex flex-col items-center gap-1 text-xs text-primary touch-target rounded-xl hover:bg-primary-soft transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
         >
           <PlusIcon className="w-5 h-5" aria-hidden={true} />
           <span>New</span>
@@ -166,7 +166,7 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
           tabIndex={isOpen ? undefined : -1}
           onClick={() => { router.push('/trash'); setIsOpen(false) }}
           aria-label="Trash"
-          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 min-h-[44px] min-w-[44px] rounded-xl hover:bg-surface transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
+          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 touch-target rounded-xl hover:bg-surface transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
         >
           <TrashIcon className="w-5 h-5" aria-hidden={true} />
           <span>Trash</span>
@@ -176,7 +176,7 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
           tabIndex={isOpen ? undefined : -1}
           onClick={() => { router.push('/profile'); setIsOpen(false) }}
           aria-label="Profile"
-          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 min-h-[44px] min-w-[44px] rounded-xl hover:bg-surface transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
+          className="flex flex-col items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 touch-target rounded-xl hover:bg-surface transition-colors px-3 py-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:rounded-xl focus-visible:outline-none"
         >
           <UserIcon className="w-5 h-5" aria-hidden={true} />
           <span>Profile</span>

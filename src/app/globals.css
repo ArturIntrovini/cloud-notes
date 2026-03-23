@@ -12,7 +12,6 @@
   --color-danger-val: #dc2626;
   --color-surface-val: #ffffff;
   --color-surface-elevated-val: #f5f7f5;
-  --color-neutral-50-val: #f9fafb;
   --color-neutral-500-val: #6b7280;
   --color-neutral-900-val: #111827;
 
@@ -50,4 +49,11 @@
   0% { opacity: 1; }
   70% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

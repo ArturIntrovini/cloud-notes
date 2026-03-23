@@ -65,7 +65,7 @@ export function NoteListItem({ note }: NoteListItemProps) {
         onClick={handleTrash}
         disabled={trashing}
         aria-label={`Move "${displayTitle}" to Trash`}
-        className="text-danger text-sm shrink-0 disabled:opacity-60 min-h-[44px] min-w-[44px] flex items-center justify-center"
+        className="text-danger text-sm shrink-0 disabled:opacity-60 touch-target flex items-center justify-center"
       >
         {trashing ? 'Moving…' : 'Move to Trash'}
       </button>
