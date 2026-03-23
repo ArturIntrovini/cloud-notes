@@ -25,6 +25,10 @@ export function NoteEditor({ note }: NoteEditorProps) {
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    // Reset on mount/remount — guards against React Strict Mode's double-invoke
+    // (cleanup sets isMountedRef=false; without this reset the component stays
+    //  "unmounted" and all saveNote() calls silently no-op).
+    isMountedRef.current = true
     function handleBeforeUnload(e: BeforeUnloadEvent) {
       if (isDirtyRef.current) {
         e.preventDefault()
