@@ -49,6 +49,7 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dockRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const [pendingUpdate, setPendingUpdate] = useState<{ text: string; animating: boolean } | null>(null)
   const router = useRouter()
   const [prevSaveStatus, setPrevSaveStatus] = useState<SaveStatus>(saveStatus)
   const [displayText, setDisplayText] = useState('')
@@ -60,16 +61,35 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
   if (prevSaveStatus !== saveStatus) {
     setPrevSaveStatus(saveStatus)
     if (saveStatus === 'saving') {
-      setDisplayText('Saving…')
-      setIsAnimating(false)
+      if (isAnimating) {
+        // Save-fade animation is in progress — queue update so it completes naturally
+        setPendingUpdate({ text: 'Saving…', animating: false })
+      } else {
+        setDisplayText('Saving…')
+        setIsAnimating(false)
+        setPendingUpdate(null)
+      }
     } else if (saveStatus === 'saved') {
+      setPendingUpdate(null)  // 'saved' takes priority, cancel any pending
       setDisplayText('Saved')
       setIsAnimating(true)
     } else if (saveStatus === 'error') {
-      setDisplayText('Could not save now. Trying again…')
-      setIsAnimating(false)
+      if (isAnimating) {
+        setPendingUpdate({ text: 'Could not save now. Trying again…', animating: false })
+      } else {
+        setDisplayText('Could not save now. Trying again…')
+        setIsAnimating(false)
+        setPendingUpdate(null)
+      }
     }
-    // When 'idle': do NOT clear — let onAnimationEnd handle it naturally
+    // When 'idle': if animation is running let onAnimationEnd handle cleanup naturally;
+    // if no animation is running, clear immediately (avoids Saving… text getting stuck)
+    } else if (saveStatus === 'idle') {
+      if (!isAnimating) {
+        setDisplayText('')
+        setPendingUpdate(null)
+      }
+    }
   }
 
   useEffect(() => {
@@ -104,8 +124,14 @@ export function CloudHub({ mode, saveStatus = 'idle' }: CloudHubProps) {
   }, [isOpen])
 
   function handleAnimationEnd() {
-    setDisplayText('')
-    setIsAnimating(false)
+    if (pendingUpdate) {
+      setDisplayText(pendingUpdate.text)
+      setIsAnimating(pendingUpdate.animating)
+      setPendingUpdate(null)
+    } else {
+      setDisplayText('')
+      setIsAnimating(false)
+    }
   }
 
   if (mode === 'editor') {

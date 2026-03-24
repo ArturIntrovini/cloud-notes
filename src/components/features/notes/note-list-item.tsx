@@ -21,7 +21,7 @@ export function NoteListItem({ note }: NoteListItemProps) {
 
   const displayTitle = note.title.trim() || 'Untitled'
   const snippet = contentSnippet(note.content)
-  const formattedDate = note.updatedAt.toLocaleDateString('en-US', {
+  const formattedDate = note.updatedAt.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
